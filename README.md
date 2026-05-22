@@ -1,6 +1,6 @@
 # Tifybe CLI
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/tifybe/tifybe-cli)](https://goreportcard.com/report/github.com/tifybe/tifybe-cli)
+[![Go Report Card](https://goreportcard.com/badge/github.com/emirhannsarial/tifybe-cli)](https://goreportcard.com/report/github.com/emirhannsarial/tifybe-cli)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 Tifybe CLI is a fast, lightweight, and open-source command-line tool built in Go that allows developers to securely receive and inspect webhooks on their local machine.
@@ -21,11 +21,11 @@ Gone are the days of setting up complex reverse proxies or wrestling with NAT co
 If you have Go 1.22+ installed, you can install the CLI directly:
 
 ```bash
-go install github.com/tifybe/tifybe-cli@latest
+go install github.com/emirhannsarial/tifybe-cli@latest
 ```
 
 ### Download Binaries
-Pre-compiled binaries for all major platforms are available on the [Releases](https://github.com/tifybe/tifybe-cli/releases) page.
+Pre-compiled binaries for all major platforms are available on the [Releases](https://github.com/emirhannsarial/tifybe-cli/releases) page.
 
 ## Quick Start
 
