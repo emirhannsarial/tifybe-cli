@@ -2,7 +2,7 @@ package forwarder_test
 
 import (
 	"encoding/json"
-	"github.com/tifybe/tifybe-cli/pkg/forwarder"
+	"github.com/emirhannsarial/tifybe-cli/pkg/forwarder"
 	"net/http"
 	"net/http/httptest"
 	"testing"

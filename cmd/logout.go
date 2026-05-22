@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/tifybe/tifybe-cli/pkg/config"
+	"github.com/emirhannsarial/tifybe-cli/pkg/config"
 )
 
 func init() {

@@ -1,6 +1,6 @@
 package main
 
-import "github.com/tifybe/tifybe-cli/cmd"
+import "github.com/emirhannsarial/tifybe-cli/cmd"
 
 func main() {
 	cmd.Execute()

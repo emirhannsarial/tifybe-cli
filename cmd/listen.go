@@ -12,8 +12,8 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/spf13/cobra"
-	"github.com/tifybe/tifybe-cli/pkg/config"
-	"github.com/tifybe/tifybe-cli/pkg/forwarder"
+	"github.com/emirhannsarial/tifybe-cli/pkg/config"
+	"github.com/emirhannsarial/tifybe-cli/pkg/forwarder"
 )
 
 var (

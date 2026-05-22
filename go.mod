@@ -1,4 +1,4 @@
-module github.com/tifybe/tifybe-cli
+module github.com/emirhannsarial/tifybe-cli
 
 go 1.26.2
 
