@@ -33,7 +33,7 @@ Pre-compiled binaries for all major platforms are available on the [Releases](ht
 To instantly forward incoming webhooks to a local server running on port `8080`:
 
 ```bash
-tifybe listen 8080
+tifybe-cli listen 8080
 ```
 
 **Output:**
@@ -55,7 +55,7 @@ Tired of your webhook URL changing every time you restart your terminal? You can
 
 **Login:**
 ```bash
-tifybe login
+tifybe-cli login
 ```
 *(You will be prompted to enter your API key, which can be found in your Tifybe Dashboard).*
 
