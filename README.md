@@ -21,7 +21,7 @@ Gone are the days of setting up complex reverse proxies or wrestling with NAT co
 If you have Go 1.22+ installed, you can install the CLI directly:
 
 ```bash
-go install github.com/emirhannsarial/tifybe-cli@latest
+go install github.com/emirhannsarial/tifybe-cli/cmd/tifybe@latest
 ```
 
 ### Download Binaries
@@ -33,7 +33,7 @@ Pre-compiled binaries for all major platforms are available on the [Releases](ht
 To instantly forward incoming webhooks to a local server running on port `8080`:
 
 ```bash
-tifybe-cli listen 8080
+tifybe listen 8080
 ```
 
 **Output:**
@@ -55,7 +55,7 @@ Tired of your webhook URL changing every time you restart your terminal? You can
 
 **Login:**
 ```bash
-tifybe-cli login
+tifybe login
 ```
 *(You will be prompted to enter your API key, which can be found in your Tifybe Dashboard).*
 
@@ -67,7 +67,7 @@ Now, all webhooks sent to `https://api.tifybe.com/local/my-startup` will be reli
 
 ## How It Works
 
-Under the hood, `tifybe-cli` establishes a multiplexed, outbound WebSocket connection (`wss://`) to the Tifybe Edge infrastructure. 
+Under the hood, `tifybe` establishes a multiplexed, outbound WebSocket connection (`wss://`) to the Tifybe Edge infrastructure. 
 
 1. External services send a standard `HTTP POST` request to your unique Tifybe ingress URL.
 2. The Edge infrastructure securely serializes the HTTP method, headers, and body.
