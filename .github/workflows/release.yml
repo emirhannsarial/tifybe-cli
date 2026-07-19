@@ -39,7 +39,7 @@ jobs:
           if [ "${{ matrix.goos }}" = "windows" ]; then
             output_name+='.exe'
           fi
-          go build -o $output_name ./cmd/tifybe
+          go build -ldflags "-s -w -X github.com/emirhannsarial/tifybe-cli/cmd.Version=${GITHUB_REF_NAME}" -o $output_name ./cmd/tifybe
           
       - name: Release
         uses: softprops/action-gh-release@v2

@@ -3,8 +3,8 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/spf13/cobra"
 	"github.com/emirhannsarial/tifybe-cli/pkg/config"
+	"github.com/spf13/cobra"
 )
 
 func init() {
@@ -18,7 +18,7 @@ var logoutCmd = &cobra.Command{
 		if err := config.ClearConfig(); err != nil {
 			return fmt.Errorf("failed to clear credentials: %w", err)
 		}
-		fmt.Println("✅ Logged out successfully.")
+		fmt.Println("Logged out — local credentials removed.")
 		return nil
 	},
 }

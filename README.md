@@ -1,93 +1,107 @@
-# Tifybe CLI
+# tifybe-cli
 
+[![Release](https://img.shields.io/github/v/release/emirhannsarial/tifybe-cli)](https://github.com/emirhannsarial/tifybe-cli/releases)
 [![Go Report Card](https://goreportcard.com/badge/github.com/emirhannsarial/tifybe-cli)](https://goreportcard.com/report/github.com/emirhannsarial/tifybe-cli)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-Tifybe CLI is a fast, lightweight, and open-source command-line tool built in Go that allows developers to securely receive and inspect webhooks on their local machine.
+Receive and inspect webhooks on `localhost` through a secure outbound tunnel.
 
-Gone are the days of setting up complex reverse proxies or wrestling with NAT configurations. Tifybe establishes a secure, real-time WebSocket tunnel to forward webhooks directly to your `localhost` with zero friction.
+`tifybe` gives you a public HTTPS URL that forwards every request to a port on
+your machine — so Stripe, GitHub or any webhook provider can reach your local
+dev server without port forwarding, reverse proxies or firewall changes. It is
+the open-source companion CLI to [Tifybe](https://tifybe.com), and works
+without an account.
 
-## Features
+```
+$ tifybe listen 8080
+tifybe v1.1.0
 
-- **Zero-Config Forwarding:** Start receiving webhooks instantly. No account or configuration required.
-- **Real-Time Web Viewer:** Inspect headers, payloads, and request paths instantly via a sleek web UI.
-- **Persistent Subdomains:** Claim your own custom, persistent URLs (e.g., `my-startup.tifybe.com`) so you never have to update your Stripe or GitHub webhook settings again.
-- **High Performance:** Written in Go, ensuring minimal memory footprint and sub-millisecond latency tunneling.
-- **Cross-Platform:** Available as a standalone binary for macOS, Windows, and Linux.
+  Forwarding   https://api.tifybe.com/local/req_a1b2c3d4 -> http://localhost:8080
+  Inspector    https://tifybe.com/local/req_a1b2c3d4
 
-## Installation
+23:14:02  connected — waiting for webhooks
+23:14:31  POST -> http://localhost:8080  200 (12ms)
+23:15:07  POST -> http://localhost:8080  500 (3ms)
+```
 
-### Using Go (Recommended)
-If you have Go 1.22+ installed, you can install the CLI directly:
+Every request also appears in a live web inspector (the `Inspector` URL), where
+you can read headers and payloads as they arrive.
+
+## Install
+
+**Go 1.22+**
 
 ```bash
 go install github.com/emirhannsarial/tifybe-cli/cmd/tifybe@latest
 ```
 
-### Download Binaries
-Pre-compiled binaries for all major platforms are available on the [Releases](https://github.com/emirhannsarial/tifybe-cli/releases) page.
+**Binaries** — pre-built for macOS, Windows and Linux (amd64/arm64) on the
+[releases page](https://github.com/emirhannsarial/tifybe-cli/releases).
 
-## Quick Start
+## Usage
 
-### 1. Anonymous Mode (No Account Required)
-To instantly forward incoming webhooks to a local server running on port `8080`:
+### Anonymous session
 
 ```bash
 tifybe listen 8080
 ```
 
-**Output:**
-```text
-Tifybe CLI v1.0.0
-────────────────────────────────────────────────────────
-Forwarding:      https://api.tifybe.com/local/req_a1b2c3d4  ->  http://localhost:8080
-Web Interface:   https://tifybe.com/local/req_a1b2c3d4
-Status:          🟢 Online & Listening
+Prints a randomly generated public URL. Paste it wherever a provider asks for a
+webhook URL. The URL lives as long as the session; no account needed.
 
-Waiting for webhooks...
-────────────────────────────────────────────────────────
-```
+### Persistent URL
 
-You can now copy the **Forwarding** URL and paste it into Stripe, GitHub, or any other third-party service. Open the **Web Interface** URL in your browser to inspect the payloads as they arrive.
+A random URL changes on every restart. With a free Tifybe account you can claim
+a subdomain that stays yours:
 
-### 2. Authenticated Mode (Persistent URLs)
-Tired of your webhook URL changing every time you restart your terminal? You can claim a persistent subdomain by linking the CLI to your free Tifybe account.
-
-**Login:**
 ```bash
-tifybe login
+tifybe login                                # paste your API key (tfy_…)
+tifybe listen 8080 --subdomain=my-startup   # → …/local/my-startup, forever
 ```
-*(You will be prompted to enter your API key, which can be found in your Tifybe Dashboard).*
 
-**Listen on a Custom Subdomain:**
+Configure it once in your provider's dashboard and never touch it again.
+
+### Commands & flags
+
+| Command | Description |
+|---|---|
+| `tifybe listen <port>` | Start a tunnel to `localhost:<port>` |
+| `tifybe login` | Store your API key in `~/.tifybe/credentials.json` (mode `0600`) |
+| `tifybe logout` | Delete stored credentials |
+| `tifybe --version` | Print the version |
+
+`listen` flags: `--subdomain` (persistent URL, requires login),
+`--backend-url`, `--frontend-url` (self-hosted / testing overrides).
+
+## How it works
+
+1. The CLI opens an **outbound** WebSocket connection to the Tifybe edge —
+   nothing on your machine listens publicly.
+2. A provider POSTs to your public URL; the edge serializes the method, headers
+   and body and streams the frame down the WebSocket.
+3. The CLI replays the request against `localhost:<port>` and logs the local
+   server's status code and response time.
+
+If the connection drops, the CLI reconnects automatically with exponential
+backoff (1s → 30s). `Ctrl-C` closes the session cleanly so the URL is released
+immediately.
+
+## Security notes
+
+- The tunnel is outbound-only; your machine accepts no inbound connections.
+- Credentials are stored locally in `~/.tifybe/credentials.json` with `0600`
+  permissions, and only ever sent as a bearer token over TLS.
+- Anonymous URLs contain 64 bits of randomness and are not enumerable.
+
+## Development
+
 ```bash
-tifybe listen 8080 --subdomain=my-startup
+go build ./...   # build
+go test ./...    # run tests
 ```
-Now, all webhooks sent to `https://api.tifybe.com/local/my-startup` will be reliably routed to your machine.
 
-## How It Works
-
-Under the hood, `tifybe` establishes a multiplexed, outbound WebSocket connection (`wss://`) to the Tifybe Edge infrastructure. 
-
-1. External services send a standard `HTTP POST` request to your unique Tifybe ingress URL.
-2. The Edge infrastructure securely serializes the HTTP method, headers, and body.
-3. The payload is streamed down your active WebSocket connection.
-4. The CLI reconstructs the request and forwards it to your specified `localhost` port.
-
-This architecture ensures that your local environment remains completely shielded from the public internet, mitigating the risk of inbound attacks.
-
-## Contributing
-
-We welcome contributions from the community! If you've found a bug, have a feature request, or want to contribute code:
-
-1. Fork the repository.
-2. Create your feature branch (`git checkout -b feature/amazing-feature`).
-3. Commit your changes (`git commit -m 'feat: add amazing feature'`).
-4. Push to the branch (`git push origin feature/amazing-feature`).
-5. Open a Pull Request.
-
-Please ensure all tests pass (`go test ./...`) and that your code adheres to standard Go formatting guidelines (`go fmt`).
+Bug reports and PRs are welcome — please run `go fmt` and make sure tests pass.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT — see [LICENSE](LICENSE).

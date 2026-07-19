@@ -6,8 +6,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/spf13/cobra"
 	"github.com/emirhannsarial/tifybe-cli/pkg/config"
+	"github.com/spf13/cobra"
 )
 
 func init() {
@@ -40,8 +40,8 @@ var loginCmd = &cobra.Command{
 			return fmt.Errorf("failed to save credentials: %w", err)
 		}
 
-		fmt.Println("\n✅ Successfully authenticated!")
-		fmt.Println("You can now use premium features like `tifybe listen <port> --subdomain=my-startup`")
+		fmt.Println("\nAuthenticated. Credentials saved to ~/.tifybe/credentials.json (0600).")
+		fmt.Println("You can now claim a persistent URL: tifybe listen 8080 --subdomain=my-startup")
 		return nil
 	},
 }
