@@ -29,7 +29,24 @@ you can read headers and payloads as they arrive.
 
 ## Install
 
-**Go 1.22+**
+**macOS / Linux** — one line:
+
+```bash
+curl -fsSL https://tifybe.com/install.sh | sh
+```
+
+**Windows** (PowerShell) — one line:
+
+```powershell
+irm https://tifybe.com/install.ps1 | iex
+```
+
+Both scripts download the latest [release](https://github.com/emirhannsarial/tifybe-cli/releases)
+binary for your platform, verify its SHA-256 checksum, and put `tifybe` on your
+PATH. Prefer to read before you run? The scripts live in this repo:
+[`install.sh`](install.sh) · [`install.ps1`](install.ps1).
+
+**Go 1.22+** — from source:
 
 ```bash
 go install github.com/emirhannsarial/tifybe-cli/cmd/tifybe@latest
