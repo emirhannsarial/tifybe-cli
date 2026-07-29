@@ -8,10 +8,37 @@ import (
 
 	"github.com/emirhannsarial/tifybe-cli/pkg/config"
 	"github.com/spf13/cobra"
+	"golang.org/x/term"
 )
 
 func init() {
 	rootCmd.AddCommand(loginCmd)
+}
+
+// readAPIKey takes the key without echoing it.
+//
+// The credentials file is written 0600, but typing the key in the clear
+// leaves it in terminal scrollback and in whatever records that session —
+// screen shares and asciinema recordings included. Piped or redirected input
+// has no terminal to hide, so that path falls back to a plain read.
+func readAPIKey() (string, error) {
+	fd := int(os.Stdin.Fd())
+	if !term.IsTerminal(fd) {
+		key, err := bufio.NewReader(os.Stdin).ReadString('\n')
+		if err != nil {
+			return "", err
+		}
+		return key, nil
+	}
+
+	raw, err := term.ReadPassword(fd)
+	// ReadPassword swallows the newline the user typed, so the next line of
+	// output would otherwise run onto the prompt.
+	fmt.Println()
+	if err != nil {
+		return "", err
+	}
+	return string(raw), nil
 }
 
 var loginCmd = &cobra.Command{
@@ -21,8 +48,7 @@ var loginCmd = &cobra.Command{
 		fmt.Println("To get your API key, visit: https://tifybe.com/dashboard/settings")
 		fmt.Print("Enter your Tifybe API key (tfy_...): ")
 
-		reader := bufio.NewReader(os.Stdin)
-		apiKey, err := reader.ReadString('\n')
+		apiKey, err := readAPIKey()
 		if err != nil {
 			return fmt.Errorf("failed to read input: %w", err)
 		}
