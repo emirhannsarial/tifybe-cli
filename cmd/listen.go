@@ -27,6 +27,18 @@ var (
 const (
 	reconnectMin = 1 * time.Second
 	reconnectMax = 30 * time.Second
+
+	// pongWait is how long the edge may go silent before the session is
+	// treated as dead. It has to exceed pingPeriod by enough that one lost
+	// ping does not end a healthy session.
+	pongWait = 70 * time.Second
+
+	// pingPeriod is how often we prove we are still here.
+	pingPeriod = 30 * time.Second
+
+	// writeWait bounds a single control-frame write so a wedged socket cannot
+	// block the pinger.
+	writeWait = 10 * time.Second
 )
 
 func init() {
@@ -156,18 +168,49 @@ func runSession(wsURL, targetURL string, headers http.Header, interrupt <-chan o
 
 	fmt.Printf("%s  connected — waiting for webhooks\n", stamp())
 
-	// Keepalive: proxy'ler boştaki bağlantıyı kesmesin diye periyodik ping.
+	// Keepalive. Two jobs, and the second is the one that matters.
+	//
+	// Proxies drop idle connections, so we ping. But a connection can also die
+	// without ever closing — the laptop suspends, the wifi changes, a NAT entry
+	// expires. Reads then block on it forever while writes keep succeeding into
+	// the kernel buffer, so `tifybe listen` sits there printing nothing and
+	// looking perfectly healthy while every webhook goes into a socket that no
+	// longer leads anywhere.
+	//
+	// The read deadline is what tells the difference. Every frame the edge
+	// sends — pong, ping or a webhook — pushes it forward; silence past
+	// pongWait ends the session, and the reconnect loop takes it from there.
+	if err := conn.SetReadDeadline(time.Now().Add(pongWait)); err != nil {
+		return fmt.Errorf("could not arm read deadline: %w", err)
+	}
+	extendDeadline := func(string) error {
+		return conn.SetReadDeadline(time.Now().Add(pongWait))
+	}
+	conn.SetPongHandler(extendDeadline)
+	conn.SetPingHandler(func(appData string) error {
+		_ = extendDeadline(appData)
+		return conn.WriteControl(websocket.PongMessage, []byte(appData), time.Now().Add(writeWait))
+	})
+
 	stopPing := make(chan struct{})
 	defer close(stopPing)
 	go func() {
-		t := time.NewTicker(30 * time.Second)
+		t := time.NewTicker(pingPeriod)
 		defer t.Stop()
 		for {
 			select {
 			case <-stopPing:
 				return
 			case <-t.C:
-				_ = conn.WriteMessage(websocket.TextMessage, []byte("ping"))
+				// A protocol ping the edge answers automatically, so the
+				// deadline advances without the backend needing to change.
+				if err := conn.WriteControl(websocket.PingMessage, nil, time.Now().Add(writeWait)); err != nil {
+					return
+				}
+				// The text heartbeat older edges reply "pong" to.
+				if err := conn.WriteMessage(websocket.TextMessage, []byte("ping")); err != nil {
+					return
+				}
 			}
 		}
 	}()
@@ -176,6 +219,9 @@ func runSession(wsURL, targetURL string, headers http.Header, interrupt <-chan o
 	go func() {
 		for {
 			_, raw, err := conn.ReadMessage()
+			// Any frame is evidence the edge is still there, webhooks
+			// included — not just the keepalive replies.
+			_ = extendDeadline("")
 			if err != nil {
 				done <- err
 				return
