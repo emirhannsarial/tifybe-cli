@@ -27,7 +27,11 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.22'
+          # Read from go.mod rather than pinned here. A pinned version drifts
+          # silently: adding a dependency can raise the go directive, and the
+          # first sign is a release build that fails after the tag is already
+          # pushed.
+          go-version-file: go.mod
           cache: false
 
       - name: Build
